@@ -1225,7 +1225,11 @@ $('snap').addEventListener('click',()=>{
  const c=$('cv'),o=document.createElement('canvas');o.width=c.width;o.height=c.height;
  const x=o.getContext('2d');x.fillStyle=getComputedStyle($('vw')).backgroundColor||'#000';x.fillRect(0,0,o.width,o.height);x.drawImage(c,0,0);
  const d=new Date(),p=n=>String(n).padStart(2,'0'),nm='immagine_'+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'_'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds())+'.png';
- o.toBlob(b=>{if(!b)return;const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)},'image/png')});
+ o.toBlob(async b=>{if(!b)return;
+  /* su telefono: foglio di condivisione (Salva immagine / Salva in Foto → galleria); altrimenti download */
+  const file=new File([b],nm,{type:'image/png'});
+  if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file]});return}catch(e){if(e&&e.name==='AbortError')return}}
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nm;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000)},'image/png')});
 /* pagina ferma: niente zoom/scroll/rimbalzo */
 ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});
