@@ -54,8 +54,10 @@ option{background:var(--bg);color:var(--tx)}
 #tb{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:2px;padding:3px;background:var(--bg);border:1px solid var(--bd);border-radius:999px;z-index:2}
 #tb button{width:auto;margin:0;padding:6px 14px;border:0;border-radius:999px;background:none;color:var(--mut)}
 #tb button.on{background:var(--tx);color:var(--on)}
-#snap{position:absolute;top:12px;right:12px;width:38px;height:38px;margin:0;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:50%;background:var(--bg);color:var(--tx);z-index:2}
-#snap:hover{border-color:var(--tx)}#snap:active{background:var(--tx);color:var(--on)}#snap svg{width:20px;height:20px;display:block}
+#snap,#pt{position:absolute;top:12px;right:12px;width:38px;height:38px;margin:0;padding:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd);border-radius:50%;background:var(--bg);color:var(--tx);z-index:2}
+#snap:hover,#pt:hover{border-color:var(--tx)}#snap:active,#pt:active,#pt[aria-pressed=true]{background:var(--tx);color:var(--on)}#snap svg,#pt svg{width:20px;height:20px;display:block}#pt{right:58px}
+main.pc{grid-template-columns:minmax(0,1fr) 0}main.pc #pn{display:none}
+@media(max-width:800px){main.pc{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) 0}}
 #bc{position:absolute;display:none;pointer-events:none;border:1px solid var(--hot);border-radius:50%;transform:translate(-50%,-50%);z-index:2}
 label.dz.over,#vw.over{outline:1px dashed var(--tx);outline-offset:-4px}label.dz.over{border-color:var(--tx);color:var(--tx)}
 #vw.over::after{content:attr(data-dt);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--view) 70%,transparent);color:var(--tx);font-size:14px;pointer-events:none;z-index:3}
@@ -247,7 +249,7 @@ label.dz.over,#vw.over{outline:1px dashed var(--tx);outline-offset:-4px}label.dz
 </div>
 
 </div></section>
-<section id="vw"><canvas id="cv"></canvas><div id="vl">Anteprima</div><div id="tb" hidden><button data-m="0" class="on" title="Muovi la vista (O)">Orbita</button><button data-m="1" title="Seleziona con il pennello (S)">Seleziona</button><button data-m="2" title="Gomma: deseleziona con il pennello (E)">Gomma</button></div><div id="bc"></div><button id="snap" type="button" title="Salva immagine" aria-label="Salva immagine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.1-1.8A1.5 1.5 0 0 1 10.1 4.5h3.8a1.5 1.5 0 0 1 1.3.7L16.3 7h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="12.6" r="3.4"/></svg></button></section>
+<section id="vw"><canvas id="cv"></canvas><div id="vl">Anteprima</div><div id="tb" hidden><button data-m="0" class="on" title="Muovi la vista (O)">Orbita</button><button data-m="1" title="Seleziona con il pennello (S)">Seleziona</button><button data-m="2" title="Gomma: deseleziona con il pennello (E)">Gomma</button></div><div id="bc"></div><button id="pt" type="button" title="Apri/chiudi proprietà (P)" aria-label="Apri/chiudi proprietà" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M14.5 4.5v15"/></svg></button><button id="snap" type="button" title="Salva immagine" aria-label="Salva immagine"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.1-1.8A1.5 1.5 0 0 1 10.1 4.5h3.8a1.5 1.5 0 0 1 1.3.7L16.3 7h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="12.6" r="3.4"/></svg></button></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
@@ -1231,11 +1233,17 @@ addEventListener('scroll',()=>scrollTo(0,0));
 /* il pannello si rimpicciolisce da solo se serve, così sta sempre tutto in schermo */
 (function(){
  const pn=$('pn'),pw=$('pw');let q=0;
- function fit(){q=0;const cs=getComputedStyle(pn),av=pn.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+ function fit(){q=0;if(!pn.clientHeight)return;const cs=getComputedStyle(pn),av=pn.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
   let z=1;const set=v=>{pw.style.transform=v<1?'scale('+v+')':'';pw.style.width=v<1?(100/v)+'%':'100%'};set(1);
   while(z>.5&&pw.offsetHeight*z>av){z=Math.round((z-.02)*100)/100;set(z)}}
  const sch=()=>{if(!q)q=requestAnimationFrame(fit)};
  new ResizeObserver(sch).observe(pn);new ResizeObserver(sch).observe(pw);addEventListener('resize',sch);sch();
  new ResizeObserver(()=>rs()).observe($('vw'));
 })();
+
+/* proprietà: bottone o tasto P per aprire/chiudere il pannello */
+function togP(){const c=document.querySelector('main').classList.toggle('pc');$('pt').setAttribute('aria-pressed',String(!c))}
+$('pt').addEventListener('click',togP);
+addEventListener('keydown',e=>{if(e.key.toLowerCase()!=='p'||e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;const a=document.activeElement;
+ if(a&&(a.tagName==='TEXTAREA'||a.tagName==='SELECT'||(a.tagName==='INPUT'&&!/^(range|checkbox|file|button)$/.test(a.type))))return;e.preventDefault();togP()});
 </script></body></html>
